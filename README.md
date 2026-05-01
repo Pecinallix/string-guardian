@@ -1,4 +1,4 @@
-# encoding-guardian
+# String-Guardian
 
 A Claude Code plugin that automatically detects and preserves file encoding when editing files with accented characters — `ã`, `ç`, `à`, `é`, `ñ`, `ü`, and more.
 
@@ -44,7 +44,8 @@ UTF-8 files are detected and left completely untouched.
 ## Requirements
 
 - [Claude Code](https://claude.ai/code) CLI
-- Python 3 (`python`, `python3`, or `py` in PATH)
+- Node.js (already required by Claude Code)
+- Python 3 (`python3` or `py` in PATH) — for encoding detection and conversion
 
 ---
 
@@ -74,19 +75,19 @@ cd string-guardian
 bash install.sh
 ```
 
-The installer writes the hooks directly to `~/.claude/settings.json` and points them to the cloned folder. The plugin activates automatically for every Claude Code session after that.
+The installer writes the hooks directly to `~/.claude/settings.json` pointing to the cloned folder. The plugin activates automatically on every Claude Code session after that.
 
-## Uninstall
-
-Remove the entries added to `~/.claude/settings.json` for `pre-tool.js` and `post-tool.js`, then delete the cloned folder.
+> **Note:** The plugin won't appear in `claude plugin list` — that command only shows marketplace plugins. To verify the installation, run:
+>
+> ```bash
+> grep -A2 "pre-tool\|post-tool" ~/.claude/settings.json
+> ```
 
 ---
 
 ## Uninstall
 
-```bash
-claude plugin uninstall encoding-guardian
-```
+Remove the `pre-tool.js` and `post-tool.js` entries from `~/.claude/settings.json`, then delete the cloned folder.
 
 ---
 
@@ -105,7 +106,7 @@ The detection uses a layered heuristic — no external libraries required:
 ## Project structure
 
 ```
-encoding-guardian/
+string-guardian/
 ├── .claude-plugin/
 │   └── plugin.json        ↝ hook declarations (PreToolUse + PostToolUse)
 ├── hooks/
@@ -114,22 +115,24 @@ encoding-guardian/
 │   └── shared.js          ↝ encoding map (~/.claude/.encoding-guardian-map.json)
 ├── scripts/
 │   └── encoding.py        ↝ detect / to-utf8 / from-utf8  (pure Python stdlib)
-└── skills/encoding-guardian/
-    └── SKILL.md
+├── skills/encoding-guardian/
+│   └── SKILL.md
+├── install.sh             ↝ installer for Mac/Linux/Git Bash
+└── install.ps1            ↝ installer for Windows PowerShell
 ```
 
 ---
 
 ## Troubleshooting
 
-**Plugin doesn't activate?**
-Make sure `claude plugin list` shows `encoding-guardian`. If not, re-run `claude plugin install`.
+**Hooks not firing?**
+Run `grep -A2 "pre-tool" ~/.claude/settings.json` to confirm the hooks are registered.
 
 **Python not found?**
 Install Python 3 from [python.org](https://www.python.org/downloads/) and ensure it's in your PATH.
 
 **File still corrupted after edit?**
-Check that the file path doesn't contain special characters that might confuse the path resolver. Open an issue with the file extension and OS.
+Open an issue with the file extension, OS, and original encoding.
 
 ---
 
