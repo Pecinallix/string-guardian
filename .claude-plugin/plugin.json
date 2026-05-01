@@ -1,0 +1,57 @@
+{
+  "name": "encoding-guardian",
+  "description": "Detecta e preserva o encoding original de arquivos (cp1252, latin-1, etc.) ao editar arquivos com caracteres acentuados (ã, ç, à, é, etc). Converte para UTF-8 antes da edição e restaura o encoding original após salvar.",
+  "author": {
+    "name": "icaro"
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-tool.js\"",
+            "timeout": 10,
+            "statusMessage": "Verificando encoding do arquivo..."
+          }
+        ]
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-tool.js\"",
+            "timeout": 10,
+            "statusMessage": "Verificando encoding do arquivo..."
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/post-tool.js\"",
+            "timeout": 10,
+            "statusMessage": "Restaurando encoding original..."
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/post-tool.js\"",
+            "timeout": 10,
+            "statusMessage": "Restaurando encoding original..."
+          }
+        ]
+      }
+    ]
+  }
+}
