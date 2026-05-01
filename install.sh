@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # encoding-guardian installer
-# Adds hooks directly to ~/.claude/settings.json
+# Uses Node.js (required by Claude Code) to patch ~/.claude/settings.json
 
 set -e
 
@@ -13,44 +13,42 @@ echo "Installing encoding-guardian from: $PLUGIN_DIR"
 mkdir -p "$CLAUDE_DIR"
 [ ! -f "$SETTINGS" ] && echo '{}' > "$SETTINGS"
 
-python3 - "$PLUGIN_DIR" "$SETTINGS" <<'PYEOF'
-import json, sys, os
+node - "$PLUGIN_DIR" "$SETTINGS" <<'JSEOF'
+const fs   = require('fs');
+const path = require('path');
 
-plugin_dir = sys.argv[1]
-settings_path = sys.argv[2]
+const pluginDir    = process.argv[2];
+const settingsPath = process.argv[3];
 
-with open(settings_path, 'r', encoding='utf-8') as f:
-    settings = json.load(f)
+let settings = {};
+try { settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8')); } catch {}
 
-hooks = settings.setdefault('hooks', {})
+if (!settings.hooks) settings.hooks = {};
+const hooks = settings.hooks;
 
-pre_cmd  = f'node "{plugin_dir}/hooks/pre-tool.js"'
-post_cmd = f'node "{plugin_dir}/hooks/post-tool.js"'
+const preCmd  = `node "${pluginDir}/hooks/pre-tool.js"`;
+const postCmd = `node "${pluginDir}/hooks/post-tool.js"`;
 
-def is_guardian(entry):
-    return any(
-        'pre-tool.js'  in h.get('command', '') or
-        'post-tool.js' in h.get('command', '')
-        for h in entry.get('hooks', [])
-    )
+function isGuardian(entry) {
+  return (entry.hooks || []).some(h =>
+    (h.command || '').includes('pre-tool.js') ||
+    (h.command || '').includes('post-tool.js')
+  );
+}
 
-def upsert(event, matcher, cmd):
-    bucket = hooks.setdefault(event, [])
-    # Remove old encoding-guardian entries for this matcher
-    hooks[event] = [e for e in bucket if not (e.get('matcher') == matcher and is_guardian(e))]
-    hooks[event].append({
-        'matcher': matcher,
-        'hooks': [{'type': 'command', 'command': cmd, 'timeout': 10}]
-    })
+function upsert(event, matcher, cmd) {
+  if (!hooks[event]) hooks[event] = [];
+  hooks[event] = hooks[event].filter(e => !(e.matcher === matcher && isGuardian(e)));
+  hooks[event].push({ matcher, hooks: [{ type: 'command', command: cmd, timeout: 10 }] });
+}
 
-upsert('PreToolUse',  'Read',  pre_cmd)
-upsert('PreToolUse',  'Edit',  pre_cmd)
-upsert('PostToolUse', 'Edit',  post_cmd)
-upsert('PostToolUse', 'Write', post_cmd)
+upsert('PreToolUse',  'Read',  preCmd);
+upsert('PreToolUse',  'Edit',  preCmd);
+upsert('PostToolUse', 'Edit',  postCmd);
+upsert('PostToolUse', 'Write', postCmd);
 
-with open(settings_path, 'w', encoding='utf-8') as f:
-    json.dump(settings, f, indent=2)
+fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2), 'utf8');
 
-print(f'✓ encoding-guardian installed!')
-print(f'  hooks pointing to: {plugin_dir}')
-PYEOF
+console.log('encoding-guardian installed!');
+console.log('hooks pointing to: ' + pluginDir);
+JSEOF
