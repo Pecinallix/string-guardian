@@ -30,12 +30,12 @@ No accents are ever corrupted. The whole process is invisible.
 
 ## Supported encodings
 
-| Encoding | Common in |
-|----------|-----------|
-| `cp1252` / Windows-1252 | Windows (PT, ES, FR, DE, IT…) |
-| `latin-1` / ISO-8859-1 | Legacy Linux/Unix, older web projects |
-| `utf-8-sig` (UTF-8 with BOM) | Windows Notepad, some editors |
-| `utf-16-le` / `utf-16-be` | Windows APIs, some XML files |
+| Encoding                     | Common in                             |
+| ---------------------------- | ------------------------------------- |
+| `cp1252` / Windows-1252      | Windows (PT, ES, FR, DE, IT…)       |
+| `latin-1` / ISO-8859-1       | Legacy Linux/Unix, older web projects |
+| `utf-8-sig` (UTF-8 with BOM) | Windows Notepad, some editors         |
+| `utf-16-le` / `utf-16-be`    | Windows APIs, some XML files          |
 
 UTF-8 files are detected and left completely untouched.
 
@@ -50,21 +50,30 @@ UTF-8 files are detected and left completely untouched.
 
 ## Installation
 
-### One-liner (recommended)
+### Mac / Linux
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/encoding-guardian
-claude plugin install ./encoding-guardian
+git clone https://github.com/Pecinallix/string-guardian
+cp -r string-guardian ~/.claude/plugins/encoding-guardian
+```
+
+### Windows (Git Bash)
+
+```bash
+git clone https://github.com/Pecinallix/string-guardian
+cp -r string-guardian ~/.claude/plugins/encoding-guardian
 ```
 
 ### Windows (PowerShell)
 
 ```powershell
-git clone https://github.com/YOUR_USERNAME/encoding-guardian
-claude plugin install .\encoding-guardian
+git clone https://github.com/Pecinallix/string-guardian
+Copy-Item -Recurse string-guardian "$env:USERPROFILE\.claude\plugins\encoding-guardian"
 ```
 
-That's it. The plugin activates automatically for every Claude Code session.
+The plugin activates automatically for every Claude Code session.
+
+> **Note:** `claude plugin install` currently only supports marketplace plugins. Use the `cp` / `Copy-Item` method above for local installation.
 
 ---
 
@@ -93,13 +102,13 @@ The detection uses a layered heuristic — no external libraries required:
 ```
 encoding-guardian/
 ├── .claude-plugin/
-│   └── plugin.json        ← hook declarations (PreToolUse + PostToolUse)
+│   └── plugin.json        ↝ hook declarations (PreToolUse + PostToolUse)
 ├── hooks/
-│   ├── pre-tool.js        ← detects encoding, converts to UTF-8 before Claude reads/edits
-│   ├── post-tool.js       ← restores original encoding after Claude saves
-│   └── shared.js          ← encoding map (~/.claude/.encoding-guardian-map.json)
+│   ├── pre-tool.js        ↝ detects encoding, converts to UTF-8 before Claude reads/edits
+│   ├── post-tool.js       ↝ restores original encoding after Claude saves
+│   └── shared.js          ↝ encoding map (~/.claude/.encoding-guardian-map.json)
 ├── scripts/
-│   └── encoding.py        ← detect / to-utf8 / from-utf8  (pure Python stdlib)
+│   └── encoding.py        ↝ detect / to-utf8 / from-utf8  (pure Python stdlib)
 └── skills/encoding-guardian/
     └── SKILL.md
 ```
