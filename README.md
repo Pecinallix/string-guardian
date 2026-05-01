@@ -1,41 +1,124 @@
-# String-Guardian
+<p align="center">
+  <img width="154" height="129" alt="stringGuardian" src="https://github.com/user-attachments/assets/96b7a49f-edbf-4a48-b063-5a9a89fc1dd7" />
+</p>
 
-A Claude Code plugin that automatically detects and preserves file encoding when editing files with accented characters — `ã`, `ç`, `à`, `é`, `ñ`, `ü`, and more.
+<h1 align="center">string-guardian</h1>
 
-**The problem:** When Claude edits a file encoded in Windows-1252 (cp1252) or Latin-1, it reads and writes UTF-8 — corrupting every accented character.
+<p align="center">
+  <strong>never corrupt a ã again</strong>
+</p>
 
-**The fix:** This plugin transparently converts non-UTF-8 files to UTF-8 before Claude reads them, then restores the original encoding after saving. No configuration. No manual steps. It just works.
+<p align="center">
+  <a href="https://github.com/Pecinallix/string-guardian/stargazers"><img src="https://img.shields.io/github/stars/Pecinallix/string-guardian?style=flat&color=blue" alt="Stars"></a>
+  <a href="https://github.com/Pecinallix/string-guardian/commits/main"><img src="https://img.shields.io/github/last-commit/Pecinallix/string-guardian?style=flat" alt="Last Commit"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/Pecinallix/string-guardian?style=flat" alt="License"></a>
+</p>
+
+<p align="center">
+  <a href="#the-problem">Problem</a> •
+  <a href="#how-it-works">How it works</a> •
+  <a href="#install">Install</a> •
+  <a href="#supported-encodings">Encodings</a> •
+  <a href="#troubleshooting">Troubleshooting</a>
+</p>
+
+---
+
+A [Claude Code](https://claude.ai/code) plugin that automatically detects and preserves file encoding when editing files with accented characters — `ã`, `ç`, `à`, `é`, `ñ`, `ü`, and more. No configuration. No manual steps. It just works.
+
+## The Problem
+
+When Claude edits a file encoded in Windows-1252 or Latin-1, it reads and writes UTF-8 — silently corrupting every accented character.
+
+<table>
+<tr>
+<td width="50%">
+
+### �?� Without string-guardian
+
+```php
+// Before edit (cp1252 on disk)
+$nome = "André";
+echo "Olá, " . $nome;
+// Autor: João
+```
+
+```php
+// After Claude edits (corruption)
+$nome = "AndrÃ©";
+echo "OlÃ¡, " . $nome;
+// Autor: JoÃ£o
+```
+
+</td>
+<td width="50%">
+
+### ✅ With string-guardian
+
+```php
+// Before edit (cp1252 on disk)
+$nome = "André";
+echo "Olá, " . $nome;
+// Autor: João
+```
+
+```php
+// After Claude edits (preserved)
+$nome = "André";  // �? new line added
+echo "Olá, " . $nome;
+// Autor: João
+```
+
+</td>
+</tr>
+</table>
+
+**Same edit. Zero corruption. Encoding preserved.**
+
+```
+┌──────────────────────────────────────────�?
+│  ACCENTED CHARS PRESERVED   ████████ 100%│
+│  ORIGINAL ENCODING KEPT     ████████ 100%│
+│  CONFIGURATION NEEDED       ░░░░░░░░   0 │
+│  FILES SILENTLY CORRUPTED   ░░░░░░░░   0 │
+└──────────────────────────────────────────┘
+```
+
+- **Transparent** — hooks fire automatically before and after every edit
+- **Zero config** — detects encoding on the fly, no `.editorconfig` needed
+- **Non-destructive** — UTF-8 files are detected and left completely untouched
+- **No dependencies** — pure Python stdlib + Node.js (already in Claude Code)
 
 ---
 
 ## How it works
 
 ```
-1. Claude wants to edit arquivo.php  (encoded as cp1252 on disk)
+1. Claude wants to edit arquivo.php  (cp1252 on disk)
          ↓
-2. [encoding-guardian] detects cp1252, converts file to UTF-8 in-place
+2. [string-guardian] detects cp1252, converts to UTF-8 in-place
          ↓
-3. Claude reads ✓ and edits ✓  (sees correct ã ç à é)
+3. Claude reads ✓  and edits ✓  (sees correct ã ç à é)
          ↓
 4. Claude saves the file (UTF-8)
          ↓
-5. [encoding-guardian] restores the file back to cp1252
+5. [string-guardian] restores the file back to cp1252
          ↓
 6. File on disk: correct content, original encoding preserved ✓
 ```
 
-No accents are ever corrupted. The whole process is invisible.
+The whole process is invisible. No temp files, no copies, no side effects.
 
 ---
 
 ## Supported encodings
 
-| Encoding                     | Common in                             |
-| ---------------------------- | ------------------------------------- |
-| `cp1252` / Windows-1252      | Windows (PT, ES, FR, DE, IT…)       |
-| `latin-1` / ISO-8859-1       | Legacy Linux/Unix, older web projects |
-| `utf-8-sig` (UTF-8 with BOM) | Windows Notepad, some editors         |
-| `utf-16-le` / `utf-16-be`    | Windows APIs, some XML files          |
+| Encoding | Common in |
+|---|---|
+| `cp1252` / Windows-1252 | Windows (PT, ES, FR, DE, IT…) |
+| `latin-1` / ISO-8859-1 | Legacy Linux/Unix, older web projects |
+| `utf-8-sig` (UTF-8 with BOM) | Windows Notepad, some editors |
+| `utf-16-le` / `utf-16-be` | Windows APIs, some XML files |
 
 UTF-8 files are detected and left completely untouched.
 
@@ -45,13 +128,13 @@ UTF-8 files are detected and left completely untouched.
 
 - [Claude Code](https://claude.ai/code) CLI
 - Node.js (already required by Claude Code)
-- Python 3 (`python3` or `py` in PATH) — for encoding detection and conversion
+- Python 3 (`python3` or `py` in PATH)
 
 ---
 
-## Installation
+## Install
 
-### Mac / Linux
+### Mac / Linux / Git Bash
 
 ```bash
 git clone https://github.com/Pecinallix/string-guardian
@@ -67,17 +150,9 @@ cd string-guardian
 .\install.ps1
 ```
 
-### Windows (Git Bash)
-
-```bash
-git clone https://github.com/Pecinallix/string-guardian
-cd string-guardian
-bash install.sh
-```
-
 The installer writes the hooks directly to `~/.claude/settings.json` pointing to the cloned folder. The plugin activates automatically on every Claude Code session after that.
 
-> **Note:** The plugin won't appear in `claude plugin list` — that command only shows marketplace plugins. To verify the installation, run:
+> **Note:** The plugin won't appear in `claude plugin list` — that command only shows marketplace plugins. To verify the installation:
 >
 > ```bash
 > grep -A2 "pre-tool\|post-tool" ~/.claude/settings.json
@@ -87,11 +162,11 @@ The installer writes the hooks directly to `~/.claude/settings.json` pointing to
 
 ## Uninstall
 
-Remove the `pre-tool.js` and `post-tool.js` entries from `~/.claude/settings.json`, then delete the cloned folder.
+Remove the `pre-tool.js` and `post-tool.js` hook entries from `~/.claude/settings.json`, then delete the cloned folder.
 
 ---
 
-## How the plugin detects encoding
+## How encoding detection works
 
 The detection uses a layered heuristic — no external libraries required:
 
@@ -108,17 +183,17 @@ The detection uses a layered heuristic — no external libraries required:
 ```
 string-guardian/
 ├── .claude-plugin/
-│   └── plugin.json        ↝ hook declarations (PreToolUse + PostToolUse)
+│   └── plugin.json        �? hook declarations (PreToolUse + PostToolUse)
 ├── hooks/
-│   ├── pre-tool.js        ↝ detects encoding, converts to UTF-8 before Claude reads/edits
-│   ├── post-tool.js       ↝ restores original encoding after Claude saves
-│   └── shared.js          ↝ encoding map (~/.claude/.encoding-guardian-map.json)
+│   ├── pre-tool.js        �? detects encoding, converts to UTF-8 before Claude reads/edits
+│   ├── post-tool.js       �? restores original encoding after Claude saves
+│   └── shared.js          �? encoding map (~/.claude/.encoding-guardian-map.json)
 ├── scripts/
-│   └── encoding.py        ↝ detect / to-utf8 / from-utf8  (pure Python stdlib)
+│   └── encoding.py        �? detect / to-utf8 / from-utf8  (pure Python stdlib)
 ├── skills/encoding-guardian/
 │   └── SKILL.md
-├── install.sh             ↝ installer for Mac/Linux/Git Bash
-└── install.ps1            ↝ installer for Windows PowerShell
+├── install.sh             �? installer for Mac/Linux/Git Bash
+└── install.ps1            �? installer for Windows PowerShell
 ```
 
 ---
