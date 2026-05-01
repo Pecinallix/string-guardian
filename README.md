@@ -54,26 +54,31 @@ UTF-8 files are detected and left completely untouched.
 
 ```bash
 git clone https://github.com/Pecinallix/string-guardian
-cp -r string-guardian ~/.claude/plugins/encoding-guardian
-```
-
-### Windows (Git Bash)
-
-```bash
-git clone https://github.com/Pecinallix/string-guardian
-cp -r string-guardian ~/.claude/plugins/encoding-guardian
+cd string-guardian
+bash install.sh
 ```
 
 ### Windows (PowerShell)
 
 ```powershell
 git clone https://github.com/Pecinallix/string-guardian
-Copy-Item -Recurse string-guardian "$env:USERPROFILE\.claude\plugins\encoding-guardian"
+cd string-guardian
+.\install.ps1
 ```
 
-The plugin activates automatically for every Claude Code session.
+### Windows (Git Bash)
 
-> **Note:** `claude plugin install` currently only supports marketplace plugins. Use the `cp` / `Copy-Item` method above for local installation.
+```bash
+git clone https://github.com/Pecinallix/string-guardian
+cd string-guardian
+bash install.sh
+```
+
+The installer writes the hooks directly to `~/.claude/settings.json` and points them to the cloned folder. The plugin activates automatically for every Claude Code session after that.
+
+## Uninstall
+
+Remove the entries added to `~/.claude/settings.json` for `pre-tool.js` and `post-tool.js`, then delete the cloned folder.
 
 ---
 
