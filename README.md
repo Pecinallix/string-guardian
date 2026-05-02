@@ -38,16 +38,16 @@ When Claude edits a file encoded in Windows-1252 or Latin-1, it reads and writes
 
 ```php
 // Before edit (cp1252 on disk)
-$nome = "Andre";
-echo "Ola, " . $nome;
-// Autor: Joao
+$nome = "André";
+echo "Olá, " . $nome;
+// Autor: João
 ```
 
 ```php
 // After Claude edits (corruption)
-$nome = "AndrÃƒÂ©";
-echo "OlÃƒÂ¡, " . $nome;
-// Autor: JoÃƒÂ£o
+$nome = "AndrÃ©";
+echo "OlÃ¡, " . $nome;
+// Autor: JoÃ£o
 ```
 
 </td>
@@ -57,16 +57,16 @@ echo "OlÃƒÂ¡, " . $nome;
 
 ```php
 // Before edit (cp1252 on disk)
-$nome = "Andre";
-echo "Ola, " . $nome;
-// Autor: Joao
+$nome = "André";
+echo "Olá, " . $nome;
+// Autor: João
 ```
 
 ```php
 // After Claude edits (preserved)
-$nome = "Andre";  // <- new line added
-echo "Ola, " . $nome;
-// Autor: Joao
+$nome = "André";  // <- new line added
+echo "Olá, " . $nome;
+// Autor: João
 ```
 
 </td>
