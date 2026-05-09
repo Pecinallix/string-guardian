@@ -6,6 +6,29 @@ const os = require('os');
 const CLAUDE_DIR = path.join(os.homedir(), '.claude');
 const MAP_FILE = path.join(CLAUDE_DIR, '.encoding-guardian-map.json');
 
+const LOCK_FILE = MAP_FILE + '.lock';
+const LOCK_RETRIES = 10;
+const LOCK_RETRY_MS = 30;
+
+function acquireLock() {
+  for (let i = 0; i < LOCK_RETRIES; i++) {
+    try {
+      fs.writeFileSync(LOCK_FILE, String(process.pid), { flag: 'wx' });
+      return true;
+    } catch (e) {
+      if (e.code !== 'EEXIST') return false;
+      // Busy-wait: lock held by another process, retry
+      const end = Date.now() + LOCK_RETRY_MS;
+      while (Date.now() < end) {}
+    }
+  }
+  return false; // Could not acquire lock — proceed without it
+}
+
+function releaseLock() {
+  try { fs.unlinkSync(LOCK_FILE); } catch {}
+}
+
 function readMap() {
   try {
     if (!fs.existsSync(MAP_FILE)) return {};
@@ -17,6 +40,7 @@ function readMap() {
 }
 
 function writeMap(map) {
+  const locked = acquireLock();
   try {
     if (!fs.existsSync(CLAUDE_DIR)) {
       fs.mkdirSync(CLAUDE_DIR, { recursive: true });
@@ -26,6 +50,8 @@ function writeMap(map) {
     fs.renameSync(tmp, MAP_FILE);
   } catch {
     // Falha silenciosa — nunca bloquear o fluxo por causa do mapa
+  } finally {
+    if (locked) releaseLock();
   }
 }
 

@@ -1,7 +1,10 @@
 'use strict';
 const path = require('path');
 
-const scriptPath = path.join(__dirname, '..', 'scripts', 'encoding.py').replace(/\\/g, '/');
+// Escape backticks and $() to prevent shell injection if path contains special chars
+const scriptPath = path.join(__dirname, '..', 'scripts', 'encoding.py')
+  .replace(/\\/g, '/')
+  .replace(/[`$!]/g, '\\$&');
 
 const instructions = `STRING GUARDIAN ACTIVE.
 When reading or editing any file that may contain accented characters (e.g. PHP, Python, JS, text files):

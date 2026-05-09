@@ -6,6 +6,13 @@ set -e
 
 PLUGIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# --- Checks ---
+if ! command -v node &> /dev/null; then
+  echo "ERROR: Node.js is required but was not found in PATH."
+  echo "Install it from https://nodejs.org and try again."
+  exit 1
+fi
+
 install_claude() {
   local CLAUDE_DIR="$HOME/.claude"
   local SETTINGS="$CLAUDE_DIR/settings.json"
@@ -14,7 +21,7 @@ install_claude() {
   mkdir -p "$CLAUDE_DIR"
   [ ! -f "$SETTINGS" ] && echo '{}' > "$SETTINGS"
 
-  node - "$PLUGIN_DIR" "$SETTINGS" <<'JSEOF'
+  if node - "$PLUGIN_DIR" "$SETTINGS" <<'JSEOF'
 const fs   = require('fs');
 const path = require('path');
 
@@ -51,6 +58,11 @@ upsert('PostToolUse', 'Write', postCmd);
 fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2), 'utf8');
 console.log('  Claude Code: hooks registered in ' + settingsPath);
 JSEOF
+  then
+    : # success
+  else
+    echo "  WARNING: Claude Code install failed (could not patch settings.json)."
+  fi
 }
 
 install_codex() {
@@ -60,7 +72,7 @@ install_codex() {
   echo "  Installing for Codex CLI..."
   mkdir -p "$CODEX_DIR"
 
-  node - "$PLUGIN_DIR" "$HOOKS_FILE" <<'JSEOF'
+  if node - "$PLUGIN_DIR" "$HOOKS_FILE" <<'JSEOF'
 const fs   = require('fs');
 const path = require('path');
 
@@ -85,6 +97,11 @@ config.hooks.SessionStart.push({
 fs.writeFileSync(hooksPath, JSON.stringify(config, null, 2), 'utf8');
 console.log('  Codex: hooks registered in ' + hooksPath);
 JSEOF
+  then
+    : # success
+  else
+    echo "  WARNING: Codex install failed (could not patch ~/.codex/hooks.json)."
+  fi
 }
 
 echo "string-guardian installer"

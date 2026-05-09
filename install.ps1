@@ -1,8 +1,14 @@
 # string-guardian installer for Windows
 # Supports: Claude Code, Codex CLI
 
-$ErrorActionPreference = 'Stop'
 $pluginDir = $PSScriptRoot
+
+# --- Checks ---
+if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
+    Write-Host "ERROR: Node.js is required but was not found in PATH."
+    Write-Host "Install it from https://nodejs.org and try again."
+    exit 1
+}
 
 Write-Host "string-guardian installer"
 Write-Host "========================="
@@ -55,7 +61,11 @@ fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2), 'utf8');
 console.log('  Claude Code: hooks registered in ' + settingsPath);
 '@
 
-node -e $jsClaude $pluginDir $settingsPath
+try {
+    node -e $jsClaude $pluginDir $settingsPath
+} catch {
+    Write-Host "  WARNING: Claude Code install failed (could not patch settings.json)."
+}
 
 # --- Codex CLI ---
 if (Get-Command codex -ErrorAction SilentlyContinue) {
@@ -89,7 +99,11 @@ fs.writeFileSync(hooksPath, JSON.stringify(config, null, 2), 'utf8');
 console.log('  Codex: hooks registered in ' + hooksPath);
 '@
 
-    node -e $jsCodex $pluginDir $hooksPath
+    try {
+        node -e $jsCodex $pluginDir $hooksPath
+    } catch {
+        Write-Host "  WARNING: Codex install failed (could not patch ~/.codex/hooks.json)."
+    }
 } else {
     Write-Host "  Codex CLI not found, skipping (install codex and re-run to add support)"
 }
