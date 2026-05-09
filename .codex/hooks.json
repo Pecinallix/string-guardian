@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"__PLUGIN_DIR__/hooks/codex-session.js\"",
+            "timeout": 5,
+            "statusMessage": "Loading string-guardian..."
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -129,10 +129,19 @@ UTF-8 files are detected and left completely untouched.
 
 ---
 
+## Supported tools
+
+| Tool | Support | How it works |
+|---|---|---|
+| Claude Code | Full | PreToolUse/PostToolUse hooks -- transparent, automatic |
+| Codex CLI | Full | SessionStart hook -- injects encoding instructions at session start |
+
+---
+
 ## Requirements
 
-- [Claude Code](https://claude.ai/code) CLI
-- Node.js (already required by Claude Code)
+- [Claude Code](https://claude.ai/code) CLI and/or Codex CLI
+- Node.js (already required by both tools)
 - Python 3 (`python3` or `py` in PATH)
 
 ---
@@ -155,9 +164,13 @@ cd string-guardian
 .\install.ps1
 ```
 
-The installer writes the hooks directly to `~/.claude/settings.json` pointing to the cloned folder. The plugin activates automatically on every Claude Code session after that.
+The installer automatically detects which tools you have installed and configures each one:
+- **Claude Code** -- patches `~/.claude/settings.json`
+- **Codex CLI** -- patches `~/.codex/hooks.json`
 
-> **Note:** The plugin won't appear in `claude plugin list` -- that command only shows marketplace plugins. To verify the installation:
+If you install a new tool later, just re-run the installer.
+
+> **Note:** The plugin won't appear in `claude plugin list` -- that command only shows marketplace plugins. To verify Claude Code installation:
 >
 > ```bash
 > grep -A2 "pre-tool\|post-tool" ~/.claude/settings.json
@@ -167,7 +180,11 @@ The installer writes the hooks directly to `~/.claude/settings.json` pointing to
 
 ## Uninstall
 
-Remove the `pre-tool.js` and `post-tool.js` hook entries from `~/.claude/settings.json`, then delete the cloned folder.
+**Claude Code:** Remove the `pre-tool.js` and `post-tool.js` entries from `~/.claude/settings.json`.
+
+**Codex:** Remove the `codex-session.js` entry from `~/.codex/hooks.json`.
+
+Then delete the cloned folder.
 
 ---
 

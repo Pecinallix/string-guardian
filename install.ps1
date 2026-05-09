@@ -1,21 +1,25 @@
-# encoding-guardian installer for Windows
-# Uses Node.js (required by Claude Code) to patch %USERPROFILE%\.claude\settings.json
+# string-guardian installer for Windows
+# Supports: Claude Code, Codex CLI
 
 $ErrorActionPreference = 'Stop'
+$pluginDir = $PSScriptRoot
 
-$pluginDir    = $PSScriptRoot
+Write-Host "string-guardian installer"
+Write-Host "========================="
+Write-Host "Plugin dir: $pluginDir"
+Write-Host ""
+
+# --- Claude Code ---
+Write-Host "  Installing for Claude Code..."
 $claudeDir    = "$env:USERPROFILE\.claude"
 $settingsPath = "$claudeDir\settings.json"
 
-Write-Host "Installing encoding-guardian from: $pluginDir"
-
 New-Item -ItemType Directory -Force -Path $claudeDir | Out-Null
-
 if (-not (Test-Path $settingsPath)) {
     '{}' | Out-File -FilePath $settingsPath -Encoding utf8
 }
 
-$js = @'
+$jsClaude = @'
 const fs = require('fs');
 const pluginDir    = process.argv[2];
 const settingsPath = process.argv[3];
@@ -48,8 +52,48 @@ upsert('PostToolUse', 'Edit',  postCmd);
 upsert('PostToolUse', 'Write', postCmd);
 
 fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2), 'utf8');
-console.log('encoding-guardian installed!');
-console.log('hooks pointing to: ' + pluginDir);
+console.log('  Claude Code: hooks registered in ' + settingsPath);
 '@
 
-node -e $js $pluginDir $settingsPath
+node -e $jsClaude $pluginDir $settingsPath
+
+# --- Codex CLI ---
+if (Get-Command codex -ErrorAction SilentlyContinue) {
+    Write-Host "  Installing for Codex CLI..."
+    $codexDir  = "$env:USERPROFILE\.codex"
+    $hooksPath = "$codexDir\hooks.json"
+
+    New-Item -ItemType Directory -Force -Path $codexDir | Out-Null
+
+    $jsCodex = @'
+const fs = require('fs');
+const pluginDir = process.argv[2];
+const hooksPath = process.argv[3];
+const sessionCmd = `node "${pluginDir}\\hooks\\codex-session.js"`;
+
+let config = { hooks: {} };
+try { config = JSON.parse(fs.readFileSync(hooksPath, 'utf8')); } catch {}
+if (!config.hooks) config.hooks = {};
+if (!config.hooks.SessionStart) config.hooks.SessionStart = [];
+
+config.hooks.SessionStart = config.hooks.SessionStart.filter(e =>
+  !(e.hooks || []).some(h => (h.command || '').includes('codex-session.js'))
+);
+
+config.hooks.SessionStart.push({
+  matcher: 'startup|resume',
+  hooks: [{ type: 'command', command: sessionCmd, timeout: 5, statusMessage: 'Loading string-guardian...' }]
+});
+
+fs.writeFileSync(hooksPath, JSON.stringify(config, null, 2), 'utf8');
+console.log('  Codex: hooks registered in ' + hooksPath);
+'@
+
+    node -e $jsCodex $pluginDir $hooksPath
+} else {
+    Write-Host "  Codex CLI not found, skipping (install codex and re-run to add support)"
+}
+
+Write-Host ""
+Write-Host "Done! string-guardian is active."
+Write-Host "Restart Claude Code / Codex to apply changes."

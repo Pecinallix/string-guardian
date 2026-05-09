@@ -21,7 +21,9 @@ function writeMap(map) {
     if (!fs.existsSync(CLAUDE_DIR)) {
       fs.mkdirSync(CLAUDE_DIR, { recursive: true });
     }
-    fs.writeFileSync(MAP_FILE, JSON.stringify(map, null, 2), 'utf8');
+    const tmp = MAP_FILE + '.tmp';
+    fs.writeFileSync(tmp, JSON.stringify(map, null, 2), 'utf8');
+    fs.renameSync(tmp, MAP_FILE);
   } catch {
     // Falha silenciosa — nunca bloquear o fluxo por causa do mapa
   }

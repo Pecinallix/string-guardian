@@ -72,7 +72,8 @@ function pyConvert(cmd, filePath, encoding) {
     const r = spawnSync(py, [script, cmd, filePath, encoding], { encoding: 'utf8', timeout: 8000 });
     if (r.error && r.error.code === 'ENOENT') continue;
     if (r.status === 0) return true;
-    break;
+    emit(`[encoding-guardian] WARNING: failed to run "${cmd}" on ${path.basename(filePath)} (${py} exited ${r.status}). File encoding may be inconsistent.`);
+    return false;
   }
   return false;
 }
